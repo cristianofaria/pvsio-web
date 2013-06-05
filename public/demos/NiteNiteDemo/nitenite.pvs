@@ -1,0 +1,42 @@
+nitenite: THEORY
+ BEGIN
+
+  IMPORTING constants
+
+  Mode: TYPE = { inc, dec }
+  Light: TYPE = { x: integer | x >= off AND x <= max }
+  state: TYPE = [#
+     light: Light,
+     mode: Mode
+  #]
+
+  dec_light(st: state): state =
+    COND
+     light(st) <= min -> st WITH [ mode := inc ],
+     ELSE -> st WITH [ light := light(st) - 1 ]
+    ENDCOND
+
+  inc_light(st: state): state =
+    COND
+     light(st) >= max -> dec_light(st) WITH [ mode := dec ],
+     ELSE -> st WITH [ light := light(st) + 1 ]
+    ENDCOND
+
+  incdec_light(st: state): state =
+    COND
+     mode(st) = inc -> inc_light(st),
+     mode(st) = dec -> dec_light(st)
+    ENDCOND
+
+  poweroff(st: state): state = st WITH [ light := off, mode := inc ]
+
+  click_up(st: state): state = incdec_light(st)
+  click_down(st: state): state = incdec_light(st)
+  click_off(st: state): state = poweroff(st)
+
+  init: state = (#
+     light := 0,
+     mode  := inc
+  #)
+
+ END nitenite

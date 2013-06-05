@@ -115,6 +115,14 @@ module.exports = (function(){
 		}
 		return o;
 	};
+
+    o.getFileCode = function(data, callback){
+        if(data){
+            var fname = data.fileName && data.fileName.substring(data.fileName.indexOf(".")) === ".pvs" ?
+                data.fileName : data.fileName + ".pvs";
+            save( fname, callback);
+        }
+    }
 	
 	/**
 	 * saves the source code that pvsio is executing using information from data
@@ -154,6 +162,10 @@ module.exports = (function(){
 		pvs.kill(signal);
 		return o;
 	};
+
+    function openFile(fname, source, callback){
+        fs.readFile(0);
+    }
 	
 	return o;
 });

@@ -1,0 +1,11 @@
+constants: THEORY
+ BEGIN
+
+  green: upto(2) = 0
+  blue : upto(2) = 1
+  red  : upto(2) = 2
+  max: integer = 1
+  min: integer = -1
+  off: integer = -2
+
+ END constants

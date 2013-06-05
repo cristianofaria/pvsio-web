@@ -247,8 +247,8 @@ define('websockets/pvs/pvsiowebsocket',['util/eventDispatcher', 'formal/pvs/numb
 		 * all the pvs source code that the client can access
 		 */
 		o.startPVSProcess = function(){
-			sourceFile = "gpcaUI.pvs";
-			projectName = "gpcaUI";
+			sourceFile = "gpcaUI";
+			projectName = "../demos";
 			var token = {type:"startProcess", data:{fileName:sourceFile, projectName:projectName}};
 			ws.send(JSON.stringify(token));
 			return o;

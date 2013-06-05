@@ -1,0 +1,714 @@
+<HTML>
+<HEAD>
+<TITLE>NiteNiteDemo</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+
+<!-- JS addition for GIP & PVSio -->
+<script type="text/javascript" src="scripts/require.js" data-main='scripts/pvsiowebsocketclient_dist.js'></script>
+<script type="text/javascript" src="scripts/gip.js"></script>
+
+<script type="text/javascript" src="scripts/pixastic-lib/pixastic.core.js"></script>
+<script type="text/javascript" src="scripts/pixastic-lib/actions/brightness.js"></script>
+
+<!-- ImageReady Styles (NiteNiteDemo.psd) -->
+<STYLE TYPE="text/css">
+<!--
+
+
+
+#GIP-instructions {
+
+	position:absolute;
+
+	float: right;
+
+	text-align: justify;
+
+	left:1057px;
+
+	top:4px;
+
+	font: bold 20px Arial;
+
+	z-index: 1;
+
+	width: 229px;
+
+	height: 220px;
+
+}
+
+
+
+#GIP-status {
+
+	position:absolute;
+
+	float: right;
+
+	text-align: center;
+
+	left:67px;
+
+	top:50px;
+
+	font: bold 20px Arial;
+
+	z-index: 1;
+
+	width: 388px;
+
+	height: 25px;
+
+}
+
+
+
+
+
+#GIP-rate {
+
+	position:absolute;
+
+	float: right;
+
+	text-align: right;
+
+	left:53px;
+
+	top:77px;
+
+	font: bold 50px Arial;
+
+	z-index: 1;
+
+	width: 332px;
+
+	height: 69px;
+
+}
+
+
+
+#GIP-rate-unit {
+
+	position:absolute;
+
+	float: right;
+
+	text-align: right;
+
+	left:386px;
+
+	top:77px;
+
+	font: bold 50px Arial;
+
+	z-index: 1;
+
+	width: 67px;
+
+	height: 69px;
+
+}
+
+
+
+#GIP-cmd {
+
+	position:absolute;
+
+	float: right;
+
+	text-align: right;
+
+	left:415px;
+
+	top:201px;
+
+	font: bold 12px Arial;
+
+	z-index: 2;
+
+	width: 68px;
+
+	color: #FFFFFF;
+
+	height: 24px;
+
+}
+
+
+
+#console {
+	position:absolute;
+	left:431px;
+	top:68px;
+	width:361px;
+	height:762px;
+	color: #000000;
+	background: white;
+	padding: 0px;
+	font: 20px Arial;
+	background-color: white;
+	overflow: auto;
+}
+
+
+
+#pvsio_commands_log_h2 {
+
+	position:absolute;
+
+	left:11px;
+
+	top:967px;
+
+}
+
+
+
+#pvsio_commands_log {
+
+	position:absolute;
+
+	left:9px;
+
+	top:1020px;
+
+	width:581px;
+
+	height:200px;
+
+	overflow: scroll;
+
+	color: lime;
+
+	background: black;
+
+	padding: 10px;
+
+}
+
+
+
+
+
+#pvsio_response_log_h2 {
+
+	position:absolute;
+
+	left:629px;
+
+	top:973px;
+
+}
+
+
+
+#pvsio_response_log {
+
+	position:absolute;
+
+	left:625px;
+
+	top:1019px;
+
+	width:660px;
+
+	height:200px;
+
+	overflow: scroll;
+
+	color: lime;
+
+	background: black;
+
+	padding: 10px;
+
+}
+
+
+
+#specification_log_h2 {
+
+	position:absolute;
+
+	left:8px;
+
+	top:1275px;
+
+}
+
+
+
+#specification_log {
+
+	position:absolute;
+
+	left:9px;
+
+	top:1330px;
+
+	width:1280px;
+
+	height:638px;
+
+	overflow: scroll;
+
+	color: lime;
+
+	background: black;
+
+	padding: 10px;
+
+}
+
+
+
+#GIP_h2 {
+
+	position:absolute;
+
+	left:431px;
+
+	top:10px;
+
+	width: 420px;
+
+}
+
+
+
+
+
+#NiteNiteDemo-01 {
+	position:absolute;
+	left:0px;
+	top:0px;
+	width:408px;
+	height:2px;
+}
+
+#NiteNiteDemo-02 {
+	position:absolute;
+	left:0px;
+	top:2px;
+	width:106px;
+	height:818px;
+}
+
+#NiteNiteDemo-03 {
+	position:absolute;
+	left:106px;
+	top:2px;
+	width:193px;
+	height:100px;
+}
+
+#NiteNiteDemo-04 {
+	position:absolute;
+	left:299px;
+	top:2px;
+	width:109px;
+	height:818px;
+}
+
+#NiteNiteDemo-05 {
+	position:absolute;
+	left:106px;
+	top:102px;
+	width:193px;
+	height:45px;
+}
+
+#NiteNiteDemo-06 {
+	position:absolute;
+	left:106px;
+	top:147px;
+	width:66px;
+	height:73px;
+}
+
+#NiteNiteDemo-07 {
+	position:absolute;
+	left:172px;
+	top:147px;
+	width:30px;
+	height:49px;
+}
+
+#NiteNiteDemo-08 {
+	position:absolute;
+	left:202px;
+	top:147px;
+	width:29px;
+	height:49px;
+}
+
+#NiteNiteDemo-09 {
+	position:absolute;
+	left:231px;
+	top:147px;
+	width:68px;
+	height:73px;
+}
+
+#NiteNiteDemo-10 {
+	position:absolute;
+	left:172px;
+	top:196px;
+	width:59px;
+	height:24px;
+}
+
+#NiteNiteDemo-11 {
+	position:absolute;
+	left:106px;
+	top:220px;
+	width:17px;
+	height:310px;
+}
+
+#NiteNiteDemo-12 {
+	position:absolute;
+	left:123px;
+	top:220px;
+	width:59px;
+	height:49px;
+}
+
+#NiteNiteDemo-13 {
+	position:absolute;
+	left:182px;
+	top:220px;
+	width:38px;
+	height:217px;
+}
+
+#NiteNiteDemo-14 {
+	position:absolute;
+	left:220px;
+	top:220px;
+	width:30px;
+	height:49px;
+}
+
+#NiteNiteDemo-15 {
+	position:absolute;
+	left:250px;
+	top:220px;
+	width:29px;
+	height:49px;
+}
+
+#NiteNiteDemo-16 {
+	position:absolute;
+	left:279px;
+	top:220px;
+	width:20px;
+	height:310px;
+}
+
+#NiteNiteDemo-17 {
+	position:absolute;
+	left:123px;
+	top:269px;
+	width:59px;
+	height:21px;
+}
+
+#NiteNiteDemo-18 {
+	position:absolute;
+	left:220px;
+	top:269px;
+	width:59px;
+	height:21px;
+}
+
+#NiteNiteDemo-19 {
+	position:absolute;
+	left:123px;
+	top:290px;
+	width:59px;
+	height:50px;
+}
+
+#NiteNiteDemo-20 {
+	position:absolute;
+	left:220px;
+	top:290px;
+	width:59px;
+	height:50px;
+}
+
+#NiteNiteDemo-21 {
+	position:absolute;
+	left:123px;
+	top:340px;
+	width:59px;
+	height:20px;
+}
+
+#NiteNiteDemo-22 {
+	position:absolute;
+	left:220px;
+	top:340px;
+	width:59px;
+	height:20px;
+}
+
+#NiteNiteDemo-23 {
+	position:absolute;
+	left:123px;
+	top:360px;
+	width:59px;
+	height:50px;
+}
+
+#NiteNiteDemo-24 {
+	position:absolute;
+	left:220px;
+	top:360px;
+	width:59px;
+	height:50px;
+}
+
+#NiteNiteDemo-25 {
+	position:absolute;
+	left:123px;
+	top:410px;
+	width:59px;
+	height:27px;
+}
+
+#NiteNiteDemo-26 {
+	position:absolute;
+	left:220px;
+	top:410px;
+	width:59px;
+	height:27px;
+}
+
+#NiteNiteDemo-27 {
+	position:absolute;
+	left:123px;
+	top:437px;
+	width:49px;
+	height:93px;
+}
+
+#NiteNiteDemo-28 {
+	position:absolute;
+	left:172px;
+	top:437px;
+	width:30px;
+	height:51px;
+}
+
+#NiteNiteDemo-29 {
+	position:absolute;
+	left:202px;
+	top:437px;
+	width:25px;
+	height:51px;
+}
+
+#NiteNiteDemo-30 {
+	position:absolute;
+	left:227px;
+	top:437px;
+	width:52px;
+	height:93px;
+}
+
+#NiteNiteDemo-31 {
+	position:absolute;
+	left:172px;
+	top:488px;
+	width:55px;
+	height:42px;
+}
+
+#NiteNiteDemo-32 {
+	position:absolute;
+	left:106px;
+	top:530px;
+	width:193px;
+	height:71px;
+}
+
+#NiteNiteDemo-33 {
+	position:absolute;
+	left:106px;
+	top:601px;
+	width:193px;
+	height:37px;
+}
+
+#NiteNiteDemo-34 {
+	position:absolute;
+	left:106px;
+	top:638px;
+	width:193px;
+	height:75px;
+}
+
+#NiteNiteDemo-35 {
+	position:absolute;
+	left:106px;
+	top:713px;
+	width:61px;
+	height:107px;
+}
+
+#NiteNiteDemo-36 {
+	position:absolute;
+	left:167px;
+	top:713px;
+	width:70px;
+	height:51px;
+}
+
+#NiteNiteDemo-37 {
+	position:absolute;
+	left:237px;
+	top:713px;
+	width:62px;
+	height:107px;
+}
+
+#NiteNiteDemo-38 {
+	position:absolute;
+	left:167px;
+	top:764px;
+	width:70px;
+	height:56px;
+}
+
+-->
+</STYLE>
+<!-- End ImageReady Styles -->
+</HEAD>
+<BODY STYLE="background-color:#FFFFFF; margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px;">
+<!-- ImageReady Slices (NiteNiteDemo.psd) -->
+<DIV ID="NiteNiteDemo-01">
+	<IMG SRC="images/NiteNiteDemo_01.png" WIDTH=408 HEIGHT=2 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-02">
+	<IMG SRC="images/NiteNiteDemo_02.png" ALT="" name="b1" WIDTH=106 HEIGHT=818 id="b1"></DIV>
+<DIV ID="NiteNiteDemo-03">
+	<IMG SRC="images/NiteNiteDemo_03.png" WIDTH=193 HEIGHT=100 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-04">
+	<IMG SRC="images/NiteNiteDemo_04.png" ALT="" name="b2" WIDTH=109 HEIGHT=818 id="b2"></DIV>
+<DIV ID="NiteNiteDemo-05">
+	<IMG SRC="images/NiteNiteDemo_05.png" ALT="" name="b3" WIDTH=193 HEIGHT=45 id="b3"></DIV>
+<DIV ID="NiteNiteDemo-06">
+	<IMG SRC="images/NiteNiteDemo_06.png" ALT="" name="b4" WIDTH=66 HEIGHT=73 id="b4"></DIV>
+<DIV ID="NiteNiteDemo-07">
+	<IMG SRC="images/NiteNiteDemo_07.png" WIDTH=30 HEIGHT=49 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-08">
+	<IMG SRC="images/NiteNiteDemo_08.png" WIDTH=29 HEIGHT=49 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-09">
+	<IMG SRC="images/NiteNiteDemo_09.png" ALT="" name="b5" WIDTH=68 HEIGHT=73 id="b5"></DIV>
+<DIV ID="NiteNiteDemo-10">
+	<IMG SRC="images/NiteNiteDemo_10.png" ALT="" name="b6" WIDTH=59 HEIGHT=24 id="b6"></DIV>
+<DIV ID="NiteNiteDemo-11">
+	<IMG SRC="images/NiteNiteDemo_11.png" ALT="" name="b7" WIDTH=17 HEIGHT=310 id="b7"></DIV>
+<DIV ID="NiteNiteDemo-12">
+	<IMG SRC="images/NiteNiteDemo_12.png" ALT="turn off" name="poweroff" WIDTH=59 HEIGHT=49 id="poweroff"></DIV>
+<DIV ID="NiteNiteDemo-13">
+	<IMG SRC="images/NiteNiteDemo_13.png" ALT="" name="b8" WIDTH=38 HEIGHT=217 id="b8"></DIV>
+<DIV ID="NiteNiteDemo-14">
+	<IMG SRC="images/NiteNiteDemo_14.png" ALT="inc/dec brightness" name="dec_light" WIDTH=30 HEIGHT=49 id="dec_light"></DIV>
+<DIV ID="NiteNiteDemo-15">
+	<IMG SRC="images/NiteNiteDemo_15.png" ALT="inc/dec brightness" name="inc_light" WIDTH=29 HEIGHT=49 id="inc_light"></DIV>
+<DIV ID="NiteNiteDemo-16">
+	<IMG SRC="images/NiteNiteDemo_16.png" ALT="" name="b9" WIDTH=20 HEIGHT=310 id="b9"></DIV>
+<DIV ID="NiteNiteDemo-17">
+	<IMG SRC="images/NiteNiteDemo_17.png" ALT="" name="b10" WIDTH=59 HEIGHT=21 id="b10"></DIV>
+<DIV ID="NiteNiteDemo-18">
+	<IMG SRC="images/NiteNiteDemo_18.png" ALT="" name="b11" WIDTH=59 HEIGHT=21 id="b11"></DIV>
+<DIV ID="NiteNiteDemo-19">
+	<IMG SRC="images/NiteNiteDemo_19.png" WIDTH=59 HEIGHT=50 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-20">
+	<IMG SRC="images/NiteNiteDemo_20.png" WIDTH=59 HEIGHT=50 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-21">
+	<IMG SRC="images/NiteNiteDemo_21.png" ALT="" name="b12" WIDTH=59 HEIGHT=20 id="b12"></DIV>
+<DIV ID="NiteNiteDemo-22">
+	<IMG SRC="images/NiteNiteDemo_22.png" ALT="" name="b13" WIDTH=59 HEIGHT=20 id="b13"></DIV>
+<DIV ID="NiteNiteDemo-23">
+	<IMG SRC="images/NiteNiteDemo_23.png" WIDTH=59 HEIGHT=50 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-24">
+	<IMG SRC="images/NiteNiteDemo_24.png" WIDTH=59 HEIGHT=50 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-25">
+	<IMG SRC="images/NiteNiteDemo_25.png" ALT="" name="b14" WIDTH=59 HEIGHT=27 id="b14"></DIV>
+<DIV ID="NiteNiteDemo-26">
+	<IMG SRC="images/NiteNiteDemo_26.png" ALT="" name="b15" WIDTH=59 HEIGHT=27 id="b15"></DIV>
+<DIV ID="NiteNiteDemo-27">
+	<IMG SRC="images/NiteNiteDemo_27.png" ALT="" name="b16" WIDTH=49 HEIGHT=93 id="b16"></DIV>
+<DIV ID="NiteNiteDemo-28">
+	<IMG SRC="images/NiteNiteDemo_28.png" WIDTH=30 HEIGHT=51 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-29">
+	<IMG SRC="images/NiteNiteDemo_29.png" WIDTH=25 HEIGHT=51 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-30">
+	<IMG SRC="images/NiteNiteDemo_30.png" ALT="" name="b18" WIDTH=52 HEIGHT=93 id="b18"></DIV>
+<DIV ID="NiteNiteDemo-31">
+	<IMG SRC="images/NiteNiteDemo_31.png" ALT="" name="b17" WIDTH=55 HEIGHT=42 id="b17"></DIV>
+<DIV ID="NiteNiteDemo-32">
+	<IMG SRC="images/NiteNiteDemo_32.gif" WIDTH=193 HEIGHT=71 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-33">
+<IMG SRC="images/NiteNiteDemo_33.png" ALT="" name="b19" WIDTH=193 HEIGHT=37 border="0" id="b19"></DIV>
+<DIV ID="NiteNiteDemo-34">
+	<IMG SRC="images/NiteNiteDemo_34.png" ALT="" name="b20" WIDTH=193 HEIGHT=75 id="b20"></DIV>
+<DIV ID="NiteNiteDemo-35">
+	<IMG SRC="images/NiteNiteDemo_35.png" ALT="" name="b21" WIDTH=61 HEIGHT=107 id="b21"></DIV>
+<DIV ID="NiteNiteDemo-36">
+	<IMG SRC="images/NiteNiteDemo_36.png" WIDTH=70 HEIGHT=51 ALT="">
+</DIV>
+<DIV ID="NiteNiteDemo-37">
+	<IMG SRC="images/NiteNiteDemo_37.png" ALT="" name="b23" WIDTH=62 HEIGHT=107 id="b23"></DIV>
+<DIV ID="NiteNiteDemo-38">
+	<IMG SRC="images/NiteNiteDemo_38.png" ALT="" name="b22" WIDTH=70 HEIGHT=56 id="b22"></DIV>
+<!-- End ImageReady Slices -->
+
+<div id='pvsio_commands_log_h2'>
+<h2>GUI frontend commands</h2>
+</div>
+<div id='pvsio_commands_log'></div>
+
+<div id='pvsio_response_log_h2'>
+<h2>PVSio backend replies</h2>
+</div>
+<div id='pvsio_response_log'></div>
+
+<div id='console'></div>
+
+<div id='specification_log_h2'>
+<h2>Formal specification 
+  <label>
+  <input type="button" value="Show" onClick="ws.getSourceCode();">
+  </label>
+</h2>
+</div>
+<div id='specification_log'></div>
+
+<div id="GIP_h2">
+<h2>Brightness ( off, low, normal, high ) </h2>
+</div>
+
+<script type="text/javascript" src="scripts/pvsio_utils.js"></script>
+<script type="text/javascript" src="scripts/UI_mappings.js"></script> 
+
+</BODY>
+</HTML>

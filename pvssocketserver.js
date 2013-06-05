@@ -62,7 +62,11 @@ var p;
 	});
 	
 	webserver.all("/typecheck", function(req, res){
-		var file = req.body.file;
+		//var file = req.body.file;
+        var projectPath = __dirname + "/public/projects/" + req.body.projectName;
+        var config = fs.readFileSync(projectPath + "/config.conf", "utf8");
+        var fileName = config.split("|")[1].split(":")[1];
+        var file = projectPath + "/" + fileName;
 		procWrapper().exec({command:"proveit "  + file, 
 			callBack:function(err, stdout, stderr){
 				res.send({err:err, stdout:stdout, stderr:stderr});
@@ -72,9 +76,11 @@ var p;
 	
 	webserver.all("/newProject", function(req, res){
 		var pvsSpecName = req.files.pvsSpec.name;
-		var imageFullPath = req.files.prototypeImage.path;
+        var pvsSpecFullPath = req.files.pvsSpec.path;
+        var imageFullPath = req.files.prototypeImage.path;
 		var prototypeImage = imageFullPath.split("/").slice(-1).join("");
-		req.body.pvsSpecName = pvsSpecName;
+		req.body.pvsSpecNameUpload = pvsSpecFullPath.split("/").slice(-1).join("");
+        req.body.pvsSpecName = pvsSpecName;
 		req.body.prototypeImage = prototypeImage;
 		createProject(req, res);		
 	});
@@ -83,19 +89,69 @@ var p;
 		var projects = listProjects();
 		res.send(projects);
 	});
+
+    /*@Cristiano Faria
+    *Get pvs files from the a project
+    */
+    webserver.all("/getPvsFiles", listPVSFiles);
 	
 	webserver.all("/createProject", createProject);
-	
+
+    webserver.all("/openFileCode", openFileCode);
+
 	webserver.all("/saveTempFile", saveTempFile);
-	
+
+    webserver.all("/saveCurrentFile", saveCurrentFile);
+    
+    webserver.all("/saveConfigFile", saveConfigFile);
+
+    webserver.all("/importFile", function(req,res){
+        var pvsSpecName = req.files.pvsSpec.name;
+        var pvsSpecFullPath = req.files.pvsSpec.path;
+        var projectName =  req.body.projectName;
+        req.body.pvsSpecNameUpload = pvsSpecFullPath.split("/").slice(-1).join("");
+        req.body.projectName = projectName;
+        req.body.pvsSpecName = pvsSpecName;
+        saveImportFile(req, res);
+    });
+
+    webserver.all("/newFile", function(req,res){
+        var response = {type:"newFileCreated"};
+        var fileName = req.body.fileName;
+        var pvsFileName = fileName.split(".pvs")[0] + ".pvs";
+        var projectName = req.body.projectName;
+        var projectPath = __dirname + "/public/projects/" + projectName;
+        try{
+            if(fs.existsSync(projectPath + "/" + pvsFileName)){
+                response.err = "File with the same name exists. Please choose a different name. Old file name was " + pvsFileName;
+            }else{
+                //Create a file and save with a default source code
+                var sourceCode = pvsFileName+": THEORY \r\n BEGIN \r\n \r\n END "+pvsFileName;
+                fs.writeFileSync(projectPath + "/" + pvsFileName, sourceCode);
+                util.log(pvsFileName + " file has been created and saved.");
+                //var sourceCode = fs.readFileSync(projectPath + "/" + pvsFileName,'utf8');
+                var obj = {};
+                obj.name = pvsFileName;
+                obj.source = sourceCode;
+                response.data = obj;
+            }
+        }catch(err){
+            response.err = err;
+        }
+        res.send(response);
+    });
+
 	function listProjects(){
 		var imageExts = "jpg,jpeg,png".split(","),
+			confExts = ["conf"],
 			specExts = ["pvs"];
 		var projectDir = __dirname + "/public/projects/";
 		var res = fs.readdirSync(projectDir).map(function(d, i){
 			var p = {name:d, projectPath:projectDir + d, other:[]};
 			var stat = fs.statSync(projectDir + d);
 			if(stat.isDirectory()){
+				p.spec="";
+				p.specMain="";
 				fs.readdirSync(projectDir + d).forEach(function(f){
 					stat = fs.statSync(projectDir + d + "/" + f);
 					if(stat.isFile()){
@@ -104,11 +160,34 @@ var p;
 							p.image = f;
 							p.imageFullPath = projectDir + d + "/" + f;
 						}else if(specExts.indexOf(ext) > -1){
-							p.spec = f;
-							p.specFullPath = projectDir + d + "/" + f;
+							p.spec = p.spec + f + "|";
+							//p.specFullPath = projectDir + d + "/" + f;
+							//console.log("specs" + p.spec);
 						}
 						else if(f === "widgetDefinition.json") {
 							p.widgetDefinition = JSON.parse(fs.readFileSync(projectDir + d + "/" + f, "utf8"));
+						}
+						else if(confExts.indexOf(ext) > -1) {
+							p.conf = f;
+							p.confFullPath = projectDir + d + "/" + f;
+							var fileText = fs.readFileSync(projectDir + d + "/" + f, "utf8");
+							//console.log("texto do file "+fileText);
+							if (fileText !== ""){
+								var linhas = fileText.split("|");
+								if (linhas.length==2){
+									p.imageMain = linhas[0].split(":")[1];
+									p.imageFullPathMain = projectDir + d + "/" + p.image;
+									p.specMain = linhas[1].split(":")[1];
+									p.specFullPathMain = projectDir + d + "/" + p.spec;
+									var source = fs.readFileSync(projectDir + d + "/" + p.specMain, "utf8");
+									if (source !== null){
+										p.specMainSource = source;
+									}
+								}else{
+									p.specMain = "";
+								}
+							}
+							console.log("config added");
 						}else{
 							p.other.push(f);
 						}
@@ -122,6 +201,8 @@ var p;
 		return res;
 	}
 	httpServer.listen(8081);
+
+
 	
 var wsServer = wsbase("PVSIO")
 	.bind("sendCommand", function(token, socket, socketid){
@@ -233,7 +314,7 @@ wsServer.start({server:httpServer});
 	 * @returns
 	 */
 	function createProject(req, res){
-		var pvsFileName = req.body.pvsSpecName, pvsSpecFullPath = __dirname + uploadDir + "/" + pvsFileName;
+		var pvsFileName = req.body.pvsSpecName, pvsSpecFullPath = __dirname + uploadDir + "/" + req.body.pvsSpecNameUpload;
 		var projectName = req.body.projectName;
 		var prototypeImage = req.body.prototypeImage;
 		var imageFullPath = __dirname + uploadDir + "/" + prototypeImage;
@@ -245,6 +326,7 @@ wsServer.start({server:httpServer});
 				response.err = "Project with the same name exists. Please choose a different name. Old project name was " + projectPath;
 			}else{
 				//create a project folder
+                var imageName = "image." + prototypeImage.split(".")[1];
 				fs.mkdirSync(projectPath);
 				fs.renameSync(imageFullPath, projectPath + "/image." + prototypeImage.split(".")[1]);
 				//copy sourcecode to the project directory
@@ -254,12 +336,16 @@ wsServer.start({server:httpServer});
 				obj.image = "image." + prototypeImage.split(".")[1];
 				obj.projectPath = projectPath;
 				obj.imageFullPath = obj.projectPath + "/" + obj.image;
-				obj.name = projectName; 
+				obj.name = projectName;
+                obj.spec = pvsFileName;
+                obj.specFullPath = obj.projectPath + "/" + obj.spec;
 				obj.sourceCode = data;
-				obj.spec = pvsFileName;
-				obj.specFullPath = obj.projectPath + "/" + obj.spec;
-				util.log("Source code has been saved.");
+
+                util.log("Source code has been saved.");
 				response.data = obj;
+                var configFileName = "config.conf";
+                var configFileSource = "imageMain:"+ imageName + "|specMain:" + pvsFileName;
+                fs.writeFileSync(projectPath + "/" + configFileName, configFileSource);
 			}
 		}catch(err){
 			response.err = err;
@@ -269,3 +355,99 @@ wsServer.start({server:httpServer});
 		res.send(response);
 		
 	}
+
+    //@Cristiano Faria
+    //The objective is to take/list all pvs files from the current project
+    function listPVSFiles(req, res){
+
+        var currentProject = req.body.projectName;
+
+        console.log("projecto: " + currentProject);
+        var specExts = ["pvs"];
+        //var fileDir = __dirname + "/public/projects/AlarisGH_AsenaCC"; //takes the directory path of the current project
+        var fileDir = __dirname + "/public/projects/" + currentProject; //takes the directory path of the current project
+        var response;
+        response = fs.readdirSync(fileDir).map(function(f, i){ //This is for map the files into the dir
+            stat = fs.statSync(fileDir + "/" + f);//selecting a element
+            if(stat.isFile()){
+                var ext = f.indexOf(".") > -1 ? f.split(".")[1].toLowerCase() : "";
+
+                if(specExts.indexOf(ext) > -1){ //if it is .pvs file, it will be mapped
+                    var p = {name:f, filePath:fileDir, other:[]};
+                    p.spec = f;
+                    p.specFullPath = fileDir + "/" + f;
+                    return p;
+                }else{
+                    return null
+                }
+            }else{
+                return null;
+            }
+        });
+        response = response.filter(function(f){return f!== null;});
+        res.send(response);
+    }
+
+    function openFileCode(req, res){
+        var projectDir = __dirname + "/public/projects/";
+        var project = req.body.projectName;
+        var file = req.body.fileName + ".pvs";
+        var response;
+        response = fs.readFileSync(projectDir + project + "/" + file,'utf8');
+        res.send(response);
+    }
+
+    function saveCurrentFile(req,res){
+        var projectDir = __dirname + "/public/projects/";
+        var project = req.body.projectName;
+        var file = req.body.fileName + ".pvs";
+        var source = req.body.sourceFile;
+
+        fs.writeFileSync(projectDir + "/" + project + "/" + file, source);
+
+        res.send(file);
+    }
+    
+	function saveConfigFile(req,res){
+		var projectDir = __dirname + "/public/projects/";
+        var project = req.body.projectName;
+        var file = req.body.fileName + ".pvs";
+        var image = req.body.imageName;
+        var configFileName = "config.conf";
+		var configeFileSource = "imageMain:"+image+"|specMain:"+file
+		
+        fs.writeFileSync(projectDir + "/" + project + "/" + configFileName, configeFileSource);
+
+        res.send(configFileName);
+	}
+
+    function saveImportFile(req,res){
+        var pvsFileName = req.body.pvsSpecName, pvsSpecFullPath = __dirname + uploadDir + "/" + req.body.pvsSpecNameUpload;
+        var projectName = req.body.projectName;
+        var projectPath = __dirname + "/public/projects/" + projectName;
+        var response = {type:"fileImported"};
+        console.log("filename: "+pvsFileName);
+        console.log("path: "+pvsSpecFullPath);
+        console.log("projectname: "+projectName);
+        try{
+            if(fs.existsSync(projectPath + "/" + pvsFileName)){
+                response.err = "File with the same name exists. Please choose a different name. Old file name was " + pvsFileName;
+            }else{
+                //copy sourcecode to the project directory
+                var data = fs.readFileSync(pvsSpecFullPath,'utf8');
+                fs.writeFileSync(projectPath + "/" + pvsFileName, data);
+                util.log("Source code has been saved.");
+                var sourceCode = fs.readFileSync(projectPath + "/" + pvsFileName,'utf8');
+                var obj = {};
+                obj.name = pvsFileName;
+                obj.source = sourceCode;
+                response.data = obj;
+                //console.log(obj.name);
+            }
+        }catch(err){
+            response.err = err;
+        }
+        var result = JSON.stringify(response);
+        //util.log(result);
+        res.send(response);
+    }

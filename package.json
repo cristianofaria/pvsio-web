@@ -1,22 +1,35 @@
 {
-	"name":"pvsio-web",
-	"author":"Patrick Oladimeji <patrick@dustygem.co.uk>",
-	"description":"A javascript library to connect to and communicate with a pvsio process using websockets",
-	"version":"0.0.10",
-	"preferGlobal":"true",
-	"main":"./pvssocketserver.js",
-	"bin":"./pvssocketserver.js",
-	"dependencies":{
-		"ws":"0.4.x",
-		"optimist":"0.3.x",
-		"express":"3.x"
-	},
-	"repository":{
-		"type":"git",
-		"url":"https://github.com/thehogfather/pvsio-web"
-	},
-	"license":"MIT",
-	"engine":{
-		"node":">=0.8"
-	}
+  "name": "pvsio-web",
+  "author": {
+    "name": "Patrick Oladimeji",
+    "email": "patrick@dustygem.co.uk"
+  },
+  "description": "A javascript library to connect to and communicate with a pvsio process using websockets",
+  "version": "0.0.10",
+  "preferGlobal": "true",
+  "main": "./pvssocketserver.js",
+  "bin": {
+    "pvsio-web": "./pvssocketserver.js"
+  },
+  "dependencies": {
+    "ws": "0.4.x",
+    "optimist": "0.3.x",
+    "express": "3.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thehogfather/pvsio-web"
+  },
+  "license": "MIT",
+  "engine": {
+    "node": ">=0.8"
+  },
+  "readme": "pvsio-web\n=========\n\nA javascript library to connect to and communicate with a pvsio process using websockets.\n\nPrerequisites\n-------------\n###PVS\nBefore installation, please ensure you download and install pvs and pvsio on your computer and make sure pvsio is available as a command on your path.\nVisit http://pvs.csl.sri.com/download.shtml to download PVS.\n\n####Add PVS to your path\nYou will need to add pvs, pvsio and proveit to your PATH alternatively you can create symbolic links in /usr/bin for pvs, pvsio, and proveit with the ln command. For instance, assuming that pvs is installed in /opt/pvs6.0/pvs, the following commands should be executed in a terminal/shell:\n\n* sudo ln -s /opt/pvs6.0/pvs /usr/bin/pvs\n* sudo ln -s /opt/pvs6.0/pvsio /usr/bin/pvsio\n* sudo ln -s /opt/pvs6.0/proveit /usr/bin/proveit\n\n####nodejs\nThis package also depends on nodejs (http://nodejs.org/download/). Please download and install nodejs before proceeding to installing pvsio-web.\n\nInstallation\n------------\n### git\nclone this repository, cd into the pvsio-web directory and run\n\tnode pvssocketserver.js\n\t\n### npm install (recommended)\nTo install, use \n\tnpm install pvsio-web -g\nor (if your /usr/local/ directory is owned by root)\n\tsudo npm install pvsio-web -g \n\nUninstallation\n--------------\nTo uninstall use\n[sudo] npm uninstall pvsio-web -g\n\nRunning\n-------\nTo start the server, use \n\tsudo pvsio-web\n\nDemo\n----\nYou can interact with the interactive prototype builder by navigating your browser to\nhttp://localhost:8081/\n",
+  "readmeFilename": "README.md",
+  "_id": "pvsio-web@0.0.10",
+  "dist": {
+    "shasum": "ced2e12bd422811ad33b98d5ab8a21ef83825cbf"
+  },
+  "_from": "pvsio-web@",
+  "_resolved": "https://registry.npmjs.org/pvsio-web/-/pvsio-web-0.0.10.tgz"
 }

@@ -1,7 +1,7 @@
 gpcaUI: THEORY
  BEGIN
- 
-  %-- constants
+
+  %-- constants 
   max: posreal = 99999;
   alarmType: TYPE = {silent, beep, muted}
 

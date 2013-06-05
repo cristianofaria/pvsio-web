@@ -18,7 +18,7 @@ function(){
 }
 document.getElementById("btnOn").onclick = 
 function(){
-	ws.sendGuiAction("gpcaui_on(" + prettyprintPVSioOutput(getLastState()) + ");");
+	ws.sendGuiAction("click_on(" + prettyprintPVSioOutput(getLastState()) + ");");
 }
 document.getElementById("btnStart").onclick = 
 function(){
@@ -31,4 +31,8 @@ function(){
 document.getElementById("btnOk").onclick = 
 function(){
 	ws.sendGuiAction("click_ok(" + prettyprintPVSioOutput(getLastState()) + ");");
+}
+document.getElementById("btnCancel").onclick = 
+function(){
+	ws.sendGuiAction("click_cancel(" + prettyprintPVSioOutput(getLastState()) + ");");
 }

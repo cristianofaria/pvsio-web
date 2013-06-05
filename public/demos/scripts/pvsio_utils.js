@@ -7,6 +7,8 @@ var display_val = document.getElementById("GIP-rate"); //rate value
 var display_unit = document.getElementById("GIP-rate-unit"); //rate unit
 var display_cmd = document.getElementById("GIP-cmd");
 var display_status = document.getElementById("GIP-status");
+var display_err = document.getElementById("GIP-err-msg");
+var display_howtocancel_err = document.getElementById("GIP-howtocancel-err-msg");
 var infusing_tick_period = 1000; //ms
 var ctrl_tick_period = 250; //ms
 
@@ -27,6 +29,9 @@ var vtbi_field = new RegExp("vtbi := [0-9\/.]+");
 var infusing_field = new RegExp("is_infusing := [0-9\/.]+");
 var ctrl_cmd_field = new RegExp("ctrl_cmd := [0-9A-Za-z]+");
 var ctrl_ready_field = new RegExp("ctrl_ready := [0-9A-Za-z]+");
+var block_interaction_field = new RegExp("block_interaction := [A-Za-z]+");
+var err_field = new RegExp("err := [A-Za-z\/_]+");
+var howtocancel_err_field = new RegExp("howtocancel_err := [A-Za-z\/_]+");
 var prettyprintPVSioOutput = function(obj) {
   return obj.toString().replace(new RegExp(",,", "g"), ", ");
 }
@@ -134,7 +139,7 @@ require(['pvsiowebsocketclient_dist'], function(){
 			log("connection to server closed");
 		}).addListener("ServerReady", function(e){
 			log("pvsio process ready");
-			display_val.firstChild.nodeValue = "powered off";
+			display_val.innerHTML = "powered off";
 		}).addListener("OutputUpdated", function(e){
 			pvsio_response = prettyprintPVSioOutput(e.data);
 			pvsio_response_log(pvsio_response);
@@ -148,16 +153,24 @@ require(['pvsiowebsocketclient_dist'], function(){
 			cursor
 			  = cursor_field.exec(pvsio_response).toString().substring(
 				  cursor_field.exec(pvsio_response).toString().indexOf(":= ") + 3);
-			display_cmd.firstChild.nodeValue = ctrl_cmd;
+			display_cmd.innerHTML = ctrl_cmd;
+
+			block_interaction = block_interaction_field.exec(pvsio_response).toString().substring(
+				  block_interaction_field.exec(pvsio_response).toString().indexOf(":= ") + 3);
+			err = err_field.exec(pvsio_response).toString().substring(
+				  err_field.exec(pvsio_response).toString().indexOf(":= ") + 3);
+			howtocancel_err = howtocancel_err_field.exec(pvsio_response).toString().substring(
+				  howtocancel_err_field.exec(pvsio_response).toString().indexOf(":= ") + 3);
+
 			if(isOn == 1 && ctrl_ready == 1) {
-				display_status.firstChild.nodeValue = "";
+				display_status.innerHTML = "";
 				// power on the display
-/*				display_val.firstChild.nodeValue 
+/*				display_val.innerHTML 
 				  = eval(disp_field.exec(pvsio_response).toString().substring(
 					  disp_field.exec(pvsio_response).toString().indexOf(":= ") + 3));*/
 				render_cursor(eval(disp_field.exec(pvsio_response).toString().substring(
 					 	   disp_field.exec(pvsio_response).toString().indexOf(":= ") + 3)));
-				display_unit.firstChild.nodeValue
+				display_unit.innerHTML
 				  = unit_field.exec(pvsio_response).toString().substring(
 					  unit_field.exec(pvsio_response).toString().indexOf(":= ") + 3);
 				vtbi 
@@ -167,7 +180,7 @@ require(['pvsiowebsocketclient_dist'], function(){
 				  = eval(infusing_field.exec(pvsio_response).toString().substring(
 					  infusing_field.exec(pvsio_response).toString().indexOf(":= ") + 3));
 				if(infusing == 1) {
-					display_status.firstChild.nodeValue = "<<< infusing";
+					display_status.innerHTML = "<<< infusing";
 					if(tick_enabled == 0) {
 						// start periodic events
 						device_tick = setInterval(function(){tick()},infusing_tick_period);
@@ -184,7 +197,7 @@ require(['pvsiowebsocketclient_dist'], function(){
 			}
 			else if(isOn == 1 && ctrl_ready == 0) {
 				// power off the display
-				display_val.firstChild.nodeValue = "powering up..";
+				display_val.innerHTML = "powering up..";
 				// start periodic events
 				if(tick_enabled == 0) {
 					device_tick = setInterval(function(){tick()},ctrl_tick_period);
@@ -193,11 +206,24 @@ require(['pvsiowebsocketclient_dist'], function(){
 			}
 			else {
 				display_val.innerHTML = "powered off";
-				display_unit.firstChild.nodeValue = "";
+				display_unit.innerHTML = "";
 				// stop periodic events
 				clearInterval(device_tick);
 				// reset periodic events
 				tick_enabled = 0;
+			}
+
+                        if(block_interaction == 'TRUE') {
+				document.getElementById("GIP-err-msg").style.background = "#FF6600";
+				document.getElementById("GIP-howtocancel-err-msg").style.background = "#FF6600";
+				display_err.innerHTML = err.replace(new RegExp("_", "g"), " ");
+				display_howtocancel_err.innerHTML = howtocancel_err.replace(new RegExp("_", "g"), " ");;
+			}
+			else {
+				document.getElementById("GIP-err-msg").style.background = "transparent";
+				document.getElementById("GIP-howtocancel-err-msg").style.background = "transparent";
+				display_err.innerHTML = "";
+				display_howtocancel_err.innerHTML = "";
 			}
 		}).addListener("InputUpdated", function(e){
 			pvsio_commands_log(JSON.stringify(e.data));

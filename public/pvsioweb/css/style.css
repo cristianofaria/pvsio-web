@@ -43,6 +43,25 @@ div.downloader{
 	padding: 15px;
 	padding-left: 0px;
 }
+.bar_options_file{
+	margin:20px 0px 10px 0px;
+}
+.btn_aba a{
+	padding:7px 13px;
+	background:#CCC;
+	color:#000;
+}
+.btn_aba{
+	margin-left:-3px;
+	display:inline-block;
+}
+.btn_aba a:hover{
+	text-decoration:none;
+	cursor:pointer;
+	background:#666;
+	color:#fff;
+}
+
 .center{
 	margin-right: auto;
 	margin-left: auto;
