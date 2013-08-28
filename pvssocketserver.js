@@ -10,11 +10,13 @@
  * getSourceCode: used to get the source code of the pvs code being executed
  * @author patrick
  * @date 28 Jul 2012 21:52:31
- *
+ * @updated Cristiano Faria
+ * @date Aug 2013
  */
 
 var pvsio = require("./pvsprocess"),
 	wsbase = require("./websocketserver"),
+    easyimg = require('easyimage'),
 	util = require("util"),
 	args = require("optimist")
 			.usage("Start a PVSIO process")
@@ -91,7 +93,7 @@ var p;
 	});
 
     /*@Cristiano Faria
-    *Get pvs files from the a project
+    *Get project pvs files
     */
     webserver.all("/getPvsFiles", listPVSFiles);
 	
@@ -105,6 +107,70 @@ var p;
     
     webserver.all("/saveConfigFile", saveConfigFile);
 
+/*@Cristiano Faria
+ *Crop Image
+ */
+    webserver.all("/cropImage", function(req,res){
+        var projectPath = __dirname + "/public/projects/" + req.body.projectName + "/";
+        var imageType = req.body.image.split(".")[1];
+        var imageSrc = projectPath + "image."+imageType;
+        var imageDst = projectPath + "image."+imageType;
+        var cropx = req.body.x;
+        var cropy = req.body.y;
+        var width = req.body.width;
+        var height = req.body.height;
+        var response = {
+            "err": null,
+            "success": null
+        };
+// Crop image
+        easyimg.crop(
+            {
+                src:imageSrc, dst:imageDst,
+                cropwidth:width, cropheight:height,
+                gravity:'NorthWest',
+                x:cropx, y:cropy
+            },
+            function(err, stdout, stderr) {
+                if (err) {
+                    response.err = err;
+                    throw err;
+                }else{
+                    response.success = "Crop succefully done";
+                    console.log('Cropped');
+                }
+            }
+        );
+        res.send(response);
+    });
+
+/*@Cristiano Faria
+ *Resize Image
+ */
+webserver.all("/resizeImage", function(req,res){
+    var projectPath = __dirname + "/public/projects/" + req.body.projectName + "/";
+    var imageSrc = projectPath + req.body.image;
+    var imageDst = projectPath + req.body.image;
+    var width = req.body.width;
+    var height = req.body.height;
+    var response = {
+        "err": null,
+        "success": null
+    };
+//  Resize image
+    easyimg.resize({src:imageSrc, dst:imageDst, width:width, height:height}, function(err, stdout, stderr) {
+        if (err) {
+            response.err = err;
+            throw err;
+        }else{
+            response.success = "Resize succefully done";
+            console.log('Cropped');
+        }
+        console.log('Resized to '+ width +'x' + height);
+    });
+    res.send(response);
+});
+
     webserver.all("/importFile", function(req,res){
         var pvsSpecName = req.files.pvsSpec.name;
         var pvsSpecFullPath = req.files.pvsSpec.path;
@@ -115,6 +181,9 @@ var p;
         saveImportFile(req, res);
     });
 
+/*@Cristiano Faria
+ *Create/save a New File .pvs
+ */
     webserver.all("/newFile", function(req,res){
         var response = {type:"newFileCreated"};
         var fileName = req.body.fileName;
@@ -140,7 +209,9 @@ var p;
         }
         res.send(response);
     });
-
+/*@Cristiano Faria
+ *modified, to include the config file.
+ */
 	function listProjects(){
 		var imageExts = "jpg,jpeg,png".split(","),
 			confExts = ["conf"],
@@ -313,6 +384,9 @@ wsServer.start({server:httpServer});
 	 * @param res
 	 * @returns
 	 */
+/*@Cristiano Faria
+ *modified, to include the config file.
+ */
 	function createProject(req, res){
 		var pvsFileName = req.body.pvsSpecName, pvsSpecFullPath = __dirname + uploadDir + "/" + req.body.pvsSpecNameUpload;
 		var projectName = req.body.projectName;
@@ -356,8 +430,9 @@ wsServer.start({server:httpServer});
 		
 	}
 
-    //@Cristiano Faria
-    //The objective is to take/list all pvs files from the current project
+/*@Cristiano Faria
+ *The objective is to take/list all pvs files from the current project
+ */
     function listPVSFiles(req, res){
 
         var currentProject = req.body.projectName;
@@ -388,6 +463,9 @@ wsServer.start({server:httpServer});
         res.send(response);
     }
 
+/*@Cristiano Faria
+ *Open a requested pvs files, from the current project
+ */
     function openFileCode(req, res){
         var projectDir = __dirname + "/public/projects/";
         var project = req.body.projectName;
@@ -397,6 +475,9 @@ wsServer.start({server:httpServer});
         res.send(response);
     }
 
+/*@Cristiano Faria
+ *Save the current pvs files being edited, from the current project
+ */
     function saveCurrentFile(req,res){
         var projectDir = __dirname + "/public/projects/";
         var project = req.body.projectName;
@@ -407,7 +488,10 @@ wsServer.start({server:httpServer});
 
         res.send(file);
     }
-    
+
+/*@Cristiano Faria
+ *Create/Save a configuration file, that saves the name of the main pvs file and image of the project
+ */
 	function saveConfigFile(req,res){
 		var projectDir = __dirname + "/public/projects/";
         var project = req.body.projectName;
@@ -421,6 +505,9 @@ wsServer.start({server:httpServer});
         res.send(configFileName);
 	}
 
+/*@Cristiano Faria
+ *Save pvs file imported to the editor, from the current project
+ */
     function saveImportFile(req,res){
         var pvsFileName = req.body.pvsSpecName, pvsSpecFullPath = __dirname + uploadDir + "/" + req.body.pvsSpecNameUpload;
         var projectName = req.body.projectName;

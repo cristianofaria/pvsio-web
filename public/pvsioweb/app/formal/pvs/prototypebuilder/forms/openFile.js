@@ -1,8 +1,6 @@
 /**
- * Created with JetBrains WebStorm.
  * User: Cristiano Faria
  * Date: 15-04-2013
- * Time: 16:28
  */
 define(["./formBuilder"], function(formBuilder){
         return {

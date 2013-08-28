@@ -46,7 +46,14 @@ define(['util/eventDispatcher', "./events", "util/property","d3/d3"],
 							.append("option").attr("value", d.labelFunction)
 								.html(d.labelFunction);
 					}
-					
+                    if(d.element === "label"){
+                        el.remove("labelMessage");
+
+                        var message=el.select("validForm").text();
+                        el.select("control-group").selectAll().remove();
+                        el.select("control-group").append("label",message);
+                    }
+
 					if(d.other){
 						d.other.forEach(function(a){
 							el.attr(a, true);

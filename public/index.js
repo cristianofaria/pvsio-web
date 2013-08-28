@@ -2,14 +2,21 @@
  * Interactive prototype builder for PVSio based on the html map attribute
  * @author Patrick Oladimeji
  * @date Dec 3, 2012 : 4:42:55 PM
+ * @updated Cristiano Faria
+ * @date Aug, 2013
+ "prototype": "https://ajax.googleapis.com/ajax/libs/prototype/1.7.0.0/prototype.js",
+ "scriptaculous": "https://ajax.googleapis.com/ajax/libs/scriptaculous/1.9.0/scriptaculous.js",
+ "cropper": "../lib/cropper"
  */
 require.config({baseUrl: 'pvsioweb/app',
     paths: {
         "ace": "../lib/ace",
         "d3": "../lib/d3",
-        "pvsioweb": "formal/pvs/prototypebuilder"
+        "pvsioweb": "formal/pvs/prototypebuilder",
+        "cropper": "../lib/cropper"
     }
 });
+
 
 require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
     'pvsioweb/createOverlay',
@@ -20,7 +27,7 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
     "pvsioweb/forms/events", "pvsioweb/forms/openProject",
     "pvsioweb/forms/saveProjectAs", "pvsioweb/forms/openFile",
     "pvsioweb/forms/chooseMainFile", "pvsioweb/forms/importFile",
-    "pvsioweb/forms/newFile" ,'d3/d3'],
+    "pvsioweb/forms/newFile", 'd3/d3', "cropper/cropper"],
     function (pvsws, displayManager, overlayCreator, ace, widgetMaps, shuffle,
               widgetEditor, widgetEvents, buttonWidget, displayWidget, displayMappings,
               newProjectForm, formEvents, openProjectForm, saveProjectAs, openFileForm,
@@ -29,6 +36,8 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
         var currentProject = {name: ""}, sourceCodeChanged = false, currentFile = {name: ""};
         var tempImageName, tempSpecName, specFileName, specNameRegex = /(\w+)\s*:\s*THEORY\s+BEGIN/i;
         var filesOpened;
+        var cropx1, cropx2, cropy1, cropy2, cropwidth, cropheight;
+        var resizeValidation = false, cropValidation = false;
         var editor = ace.edit("editor");
         editor.getSession().setMode('ace/mode/text');
 
@@ -47,6 +56,10 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
         d3.select("#importFile").attr("disabled", true);
         d3.select("#newFile").attr("disabled", true);
         d3.select("#saveFile").attr("disabled", true);
+        d3.select("#crop").attr("disabled", true);
+        d3.select("#resizeFull").attr("disabled", true);
+        d3.select("#resizeSmall").attr("disabled", true);
+        //d3.select("#test-abs").style("display","none");
 //	d3.select("#header #txtProjectName").on("mousedown", function(){
 //		var txt = this;
 //		//show window to save current project as ..
@@ -147,7 +160,9 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
         });
 
         d3.select("#saveProject").on("click", function () {
-            saveProject(currentProject);
+            if(!resizeValidation && !cropValidation){
+                saveProject(currentProject);
+            }
         });
 
         function saveProject(project) {
@@ -207,18 +222,22 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
         }
 
         d3.select("#openProject").on("click", function () {
-            openProject();
+            if(!resizeValidation && !cropValidation){
+                openProject();
+            }
         });
 
         d3.select("#newProject").on("click", function () {
-            newProjectForm.create().addListener(formEvents.FormCancelled,function (e) {
-                console.log(e);
-                e.form.remove();
-            }).addListener(formEvents.FormSubmitted, function (e) {
-                console.log(e);
-                e.form.remove();
-                newProject(e.formData);
-            });
+            if(!resizeValidation && !cropValidation){
+                newProjectForm.create().addListener(formEvents.FormCancelled,function (e) {
+                    console.log(e);
+                    e.form.remove();
+                }).addListener(formEvents.FormSubmitted, function (e) {
+                    console.log(e);
+                    e.form.remove();
+                    newProject(e.formData);
+                });
+            }
         });
 
         //@Cristiano Faria
@@ -289,6 +308,347 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
                 });
             }
         });
+
+        /**@Cristiano Faria
+         * Resize image
+         */
+        //var resizeValidation = false;
+        //var imgOriginal;
+        var resizeIteration = 0;
+        d3.select("#btnResizeSaveImage").style("display","none");
+        d3.select("#btnResizeCancelImage").style("display","none");
+
+        /**
+         * Add event listener for toggling the save and cancel Resize image
+         */
+        d3.select("#btnResizeSaveImage").on("click", function () {
+            d3.select("img").style("z-index", -2);
+            d3.selectAll("#controlsContainer button").classed("selected", false);
+            d3.select(this).classed('selected', true);
+            var project = "../../projects/" + currentProject.name + "/";
+            var img = d3.select("#image");
+            var widthOriginal = img.property("naturalWidth");
+            var heightOriginal = img.property("naturalHeight");
+            var imgResizeWidth = widthOriginal + (widthOriginal * ((resizeIteration*5)/100));
+            var imgResizeHeight = heightOriginal + (heightOriginal * ((resizeIteration*5)/100));
+
+            var fd = new FormData();
+            fd.append("projectName",currentProject.name);
+            fd.append("image",currentProject.image);
+            fd.append("width",imgResizeWidth);
+            fd.append("height",imgResizeHeight);
+            // CALL to Server for really resize! (on the server)
+            //var imageFile = "image."+ currentProject.image.split(".")[1];
+
+            d3.xhr("/resizeImage").post(fd, function (err, res) {
+                if (res.err)
+                    console.log(err);
+                else {
+                    currentProject.widgetDefinition = redefineAndSaveWidgetAreasResized();
+                    console.log(res.success);
+                }
+                setTimeout(function(){
+                    resizeIteration = 0;
+                    resizeClean();
+                    updateImage(project + currentProject.image + "#" + new Date().getTime());
+                    loadWidgetDefinitions(currentProject.widgetDefinition);
+                    d3.select("#image").style("display",null);
+                    d3.select("#prototypeImage").style("display",null);
+                },1000);
+            });
+        });
+
+
+
+        d3.select("#btnResizeCancelImage").on("click", function () {
+            d3.select("img").style("z-index", 2);
+            d3.selectAll("#controlsContainer button").classed("selected", false);
+            d3.select(this).classed('selected', true);
+            resizeIteration = 0;
+            resizeClean();
+            d3.select("#image").style("display",null);
+        });
+
+        d3.select("#resizeSmall").on("click", function(){
+            if(!cropValidation && currentProject.name !== ""){
+                //var project = "../../projects/" + currentProject.name + "/";
+                var img = d3.select("#image");
+                var width = img.property("width");
+                var height = img.property("height");
+                var widthOriginal = img.property("naturalWidth");
+                var heightOriginal = img.property("naturalHeight");
+                resizeIteration = resizeIteration - 1;
+                var imgResizeWidth = widthOriginal + (widthOriginal * ((resizeIteration*5)/100));
+                var imgResizeHeight = heightOriginal + (heightOriginal * ((resizeIteration*5)/100));
+                if (imgResizeHeight < 10 || imgResizeWidth < 10){
+    //limits can be defined, for example: img cannot be smaller than 10% of it's original size
+                    resizeIteration = resizeIteration + 1;
+                    console.log("You can not put the picture smaller.");
+                }else{
+                    var style = "width:" + imgResizeWidth + "px;height:" + imgResizeHeight + "px;";
+                    if(!resizeValidation){
+                        resizeIntialization(img, style);
+                        //imgOriginal = img;
+                        resizeValidation = true;
+                    }else{
+                        d3.select("#imgResize_wrap").attr("style",style);
+                        d3.select("#image").attr("style",style);
+                    }
+                }
+            }
+        });
+
+        d3.select("#resizeFull").on("click", function(){
+            if(!cropValidation && currentProject.name !== ""){
+                //var project = "../../projects/" + currentProject.name + "/";
+                var img = d3.select("#image");
+                var width = img.property("width");
+                var height = img.property("height");
+                var widthOriginal = img.property("naturalWidth");
+                var heightOriginal = img.property("naturalHeight");
+                resizeIteration += 1;
+                var imgResizeWidth = widthOriginal + (widthOriginal * ((resizeIteration*5)/100));
+                var imgResizeHeight = heightOriginal + (heightOriginal * ((resizeIteration*5)/100));
+                if (imgResizeWidth > 910 || imgResizeHeight > 1286){
+    //limits can be defined, for example: max of the div -> 910px
+                    resizeIteration = resizeIteration - 1;
+                    console.log("You can not put the picture bigger.");
+                }else{
+                    var style = "width:" + imgResizeWidth + "px;height:" + imgResizeHeight + "px;";
+                    if(!resizeValidation){
+                        resizeIntialization(img, style);
+
+                        resizeValidation = true;
+                    }else{
+                        d3.select("#imgResize_wrap").attr("style",style);
+                        d3.select("#image").attr("style",style);
+                    }
+                }
+            }
+        });
+
+        function resizeIntialization(img, style){
+            d3.selectAll("#controlsContainer button").classed("selected",false);
+            d3.select("#btnBuilderView").style("display","none");
+            d3.select("#btnSimulatorView").style("display","none");
+            d3.select("#btnResizeCancelImage").style("display",null);
+            d3.select("#btnResizeSaveImage").style("display",null).classed("selected",true);
+            //d3.select("#image").style("display",null);
+            d3.select("#image").remove();
+            d3.select("#imgDiv").append("div").attr("id","imgResize_wrap").attr("style",style);//.attr("style","width:"+img.width+"; height:"+img.height+";");
+            d3.select("#imgResize_wrap").append("img").attr("id","image").attr("src",img.attr("src")).attr("style",style);
+
+            //imageForCrop = new Cropper.Img( 'image', { onEndCrop: onEndCrop } );
+            d3.select("#prototypeImage").style("display","none");
+            d3.select("#crop").attr("disabled",true);
+        }
+
+        function resizeClean(){
+            //go back into the state before resize call
+            var project = "../../projects/" + currentProject.name + "/";
+            d3.selectAll("#controlsContainer button").classed("selected",false);
+            d3.select("#prototypeImage").style("display",null);
+            d3.select("#btnBuilderView").style("display",null).classed("selected",true);
+            d3.select("#btnSimulatorView").style("display",null);
+
+            d3.select("#btnResizeCancelImage").style("display","none");
+            d3.select("#btnResizeSaveImage").style("display","none");
+
+            d3.select("#resizeFull").attr("disabled",null);
+            d3.select("#resizeSmall").attr("disabled",null);
+            d3.select("#imgResize_wrap").remove();
+            d3.select("#imgDiv").append("img").attr("src", project + currentProject.image).attr("id","image")
+                .attr("alt","image").attr("usemap","#prototypeMap").style("display","none");
+            //var project = "../../projects/" + currentProject.name + "/";
+            //updateImage(project + currentProject.image);
+            //resizeImageDiv();
+            resizeValidation=false;
+           // resizeIteration = 0;
+
+            d3.select("#crop").attr("disabled",null);
+
+            d3.select("#prototypeImage").style("display",null);
+        }
+
+        function redefineAndSaveWidgetAreasResized(){
+            //
+            var safe = {};
+            //var widgetM = widgetMaps.toJSON();
+            //safe.widgetMaps = widgetMaps.toJSON();
+            var regions = getRegionDefs();
+            //safe.regionDefs = getRegionDefs();
+            //console.log(safe);
+            var left=0;
+            var top=0;
+            var right=0;
+            var bottom=0;
+            var oldCoords = new Array();
+            var newCoords = new Array();
+            for (i=0;i<regions.length;i++){
+                var coords = regions[i].coords.replace(/^\s+|\s+$/g,"");
+                console.log("old coords: " + coords);
+                oldCoords = coords.split(",");
+                left = parseFloat(oldCoords[0]) + (oldCoords[0] * resizeIteration*0.05);
+                top = parseFloat(oldCoords[1]) + (oldCoords[1] * resizeIteration*0.05);
+                right = parseFloat(oldCoords[2]) + (oldCoords[2] * resizeIteration*0.05);
+                bottom = parseFloat(oldCoords[3]) + (oldCoords[3] * resizeIteration*0.05);
+                console.log("new coords: "+left+","+top+","+right+","+bottom);
+                regions[i].coords = left+","+top+","+right+","+bottom;
+                newCoords.push(regions[i]);
+            }
+            safe.widgetMaps = widgetMaps.toJSON();
+            safe.regionDefs = newCoords;
+            //save to the user's drive
+            var safeStr = JSON.stringify(safe, null, " ");
+            var fd = new FormData();
+            fd.append("fileName", currentProject.name + "/widgetDefinition.json");
+            fd.append("fileContent", safeStr);
+
+            saveWidgetDefinitionServer(fd);
+            return safe;
+        }
+
+        /**@Cristiano Faria
+         * Crop image
+         */
+        d3.select("#btnCropSaveImage").style("display","none");
+        d3.select("#btnCropCancelImage").style("display","none");
+
+        var imageForCrop;
+        d3.select("#crop").on("click", function(){
+            if(!resizeValidation && !cropValidation && currentProject.name !== ""){
+                d3.selectAll("#controlsContainer button").classed("selected",false);
+
+                d3.select("#btnBuilderView").style("display","none");
+                d3.select("#btnSimulatorView").style("display","none");
+
+                d3.select("#btnCropCancelImage").style("display",null);
+                d3.select("#btnCropSaveImage").style("display",null).classed("selected",true);
+                d3.select("#image").style("display",null);
+                imageForCrop = new Cropper.Img( 'image', { onEndCrop: onEndCrop } );
+                cropValidation = true;
+                d3.select("#prototypeImage").style("display","none");
+                //d3.select("#crop").attr("disabled",true);
+                d3.select("#resizeFull").attr("disabled",true);
+                d3.select("#resizeSmall").attr("disabled",true);
+            }
+        });
+
+        /**
+        * Add event listener for toggling the save and cancel crop image
+        */
+        d3.select("#btnCropSaveImage").on("click", function () {
+            d3.select("img").style("z-index", -2);
+            d3.selectAll("#controlsContainer button").classed("selected", false);
+            d3.select(this).classed('selected', true);
+            var project = "../../projects/" + currentProject.name + "/";
+
+            var fd = new FormData();
+            fd.append("projectName",currentProject.name);
+            fd.append("image",currentProject.image);
+            fd.append("x",cropx1);
+            fd.append("y",cropy1);
+            fd.append("width",cropwidth);
+            fd.append("height",cropheight);
+            // CALL to Server for really crop! (on the server)
+            //var imageFile = "image."+ currentProject.image.split(".")[1];
+
+            d3.xhr("/cropImage").post(fd, function (err, res) {
+                if (res.err)
+                    console.log(err);
+                else {
+                    currentProject.widgetDefinition = redefineAndSaveWidgetAreasCropped();
+                    console.log(res.success);
+                }
+                setTimeout(function () {
+                    cropClean();
+                    updateImage(project + currentProject.image + "#" + new Date().getTime());
+                    loadWidgetDefinitions(currentProject.widgetDefinition);
+                    d3.select("#prototypeImage").style("display",null);
+                }, 2000);
+
+            });
+
+        });
+
+        d3.select("#btnCropCancelImage").on("click", function () {
+            d3.select("img").style("z-index", 2);
+            d3.selectAll("#controlsContainer button").classed("selected", false);
+            d3.select(this).classed('selected', true);
+
+            cropClean();
+        });
+
+        function redefineAndSaveWidgetAreasCropped(){
+            //
+            var safe = {};
+            var widgetM = widgetMaps.toJSON();
+            //safe.widgetMaps = widgetMaps.toJSON();
+            var regions = getRegionDefs();
+            //safe.regionDefs = getRegionDefs();
+            //imageWidthHeight();
+            console.log(safe);
+            var left=0, top=0, right=0, botton=0;
+            //var newCoords = new Array();
+
+            for (i=0;i<regions.length;i++){
+                //console.log("first: " + regions[i].coords);
+                var oldCoords = regions[i].coords.split(",");
+                left = oldCoords[0] - cropx1; //x- ...;
+                top = oldCoords[1] - cropy1; //y- ...;
+                right = oldCoords[2]- cropx1; //imgWidth- ...;
+                botton = oldCoords[3]- cropy1; //imgHeight- ...;
+                if((left>=0 && top>=0) && (right<=cropwidth && botton<=cropheight)){
+                    regions[i].coords = left+","+top+","+right+","+botton;
+                    //newCoords.push(left+","+top+","+right+","+botton);
+                }else{
+                    regions[i].coords = "";
+                }
+                //console.log("second: " + regions[i].coords);
+            }
+
+            var newCoords = new Array();
+            //var newWidgetMaps = new Array();
+            for (i=0;i<regions.length;i++){
+                if(regions[i].coords!==""){
+                    newCoords.push(regions[i]);
+                 }
+            }
+            safe.widgetMaps = widgetMaps.toJSON();
+            safe.regionDefs = newCoords;
+            //save to the user's drive
+            var safeStr = JSON.stringify(safe, null, " ");
+            var fd = new FormData();
+            fd.append("fileName", currentProject.name + "/widgetDefinition.json");
+            fd.append("fileContent", safeStr);
+
+            saveWidgetDefinitionServer(fd);
+            return safe;
+        }
+
+        function cropClean(){
+        //go back into the state before crop call
+            d3.selectAll("#controlsContainer button").classed("selected",false);
+            d3.select("#prototypeImage").style("display",null);
+            d3.select("#btnBuilderView").style("display",null).classed("selected",true);
+            d3.select("#btnSimulatorView").style("display",null);
+
+            d3.select("#btnCropCancelImage").style("display","none");
+            d3.select("#btnCropSaveImage").style("display","none");
+
+            d3.select("#crop").attr("disabled",null);
+            imageForCrop.remove();
+            cropValidation = false;
+            //var project = "../../projects/" + currentProject.name + "/";
+            //updateImage(project + currentProject.image);
+            //resizeImageDiv();
+
+            d3.select("#resizeFull").attr("disabled",null);
+            d3.select("#resizeSmall").attr("disabled",null);
+
+            d3.select("#prototypeImage").style("display",null);
+        }
+
 
         //create mouse actions for draging areas on top of the image
         var img = d3.select("#imageDiv img");
@@ -367,7 +727,7 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
         resizeImageDiv();
 
         function resizeImageDiv() {
-            var img = d3.select('#imageDiv img');
+            var img = d3.select('#imgDiv img');
             image.style("height", img.property("height") + "px")
                 .style("width", img.property("width") + "px");
             d3.select("#imageDiv").style("width", img.property("width"));
@@ -408,8 +768,11 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
             var imageExts = 'png,jpg,jpeg'.split(",");
             //add listener for  upload button
             d3.selectAll("#btnLoadPicture").on("click", function () {
-                d3.select("#btnSelectPicture").node().click();
+                if(!resizeValidation && !cropValidation){
+                    d3.select("#btnSelectPicture").node().click();
+                }
             });
+
             d3.select("#btnSelectPicture").on("change", function () {
                 var files = d3.event.currentTarget.files;
                 if (files && imageExts.indexOf(files[0].name.split(".").slice(-1).join("").toLowerCase()) > -1) {
@@ -486,7 +849,7 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
         }
 
         function updateImage(imagepath) {
-            d3.select("#imageDiv img").attr("src", imagepath);
+            d3.select("#imgDiv img").attr("src", imagepath);
             d3.select("#prototypeImage")
                 .style("background-image", "url(" + imagepath + ")");
             setTimeout(resizeImageDiv, 500);
@@ -525,6 +888,7 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
                     selected = filesOpened.length-1;
                     addTabFile(selected);
                     updateSourceCode(filesOpened[selected].source);
+                    enablePictureToolbar();
                     enableFilesToolbar();
                     d3.select("#imageDragAndDrop.dndcontainer").style("display", "none");
                 }else{
@@ -549,6 +913,15 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
             fd.append("fileName", project.name + "/widgetDefinition.json");
             fd.append("fileContent", safeStr);
 
+            saveWidgetDefinitionServer(fd);
+            /*
+            d3.xhr("/saveWidgetDefinition").post(fd).on("load", function (res) {
+                res = JSON.parse(res.responseText);
+                console.log(res);
+            });*/
+        }
+
+        function saveWidgetDefinitionServer(fd){
             d3.xhr("/saveWidgetDefinition").post(fd).on("load", function (res) {
                 res = JSON.parse(res.responseText);
                 console.log(res);
@@ -568,6 +941,9 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
             return regionDefs;
         }
 
+/**@Cristiano Faria
+* modified
+*/
         function openProject() {
             editor.setReadOnly(true);
             d3.xhr("/openProject").post(function (err, res) {
@@ -584,6 +960,8 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
                             console.log(e);
                             //only update the image and pvsfile if a real project was selected
                             if (currentProject.name !== "") {
+                                //alert("regionsDefs "+currentProject.widgetDefinition);
+                                console.log("regionsDefs " +currentProject.widgetDefinition);
                                 //clean all file tabs
                                 d3.select("#tabs_files").selectAll("a").remove();
 
@@ -672,6 +1050,7 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
                                         });
                                 }
                                 d3.select("#imageDragAndDrop.dndcontainer").style("display", "none");
+                                enablePictureToolbar();
                                 enableFilesToolbar();
                             } //else it is not possible to open that project, please try again in a few moments
 
@@ -858,6 +1237,11 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
             d3.select("#newFile").attr("disabled", null);
             d3.select("#saveFile").attr("disabled", null);
         }
+        function enablePictureToolbar(){
+            d3.select("#crop").attr("disabled", null);
+            d3.select("#resizeFull").attr("disabled", null);
+            d3.select("#resizeSmall").attr("disabled", null);
+        }
 
         function loadWidgetDefinitions(defs) {
             //clear old widhget maps and area def
@@ -898,5 +1282,20 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
                     }
                 });
             }
+        }
+
+/**@Cristiano Faria
+ * function needed to "capture" the values for image crop
+*/
+        function onEndCrop( coords, dimensions ) {
+
+            cropx1 = coords.x1;
+            cropy1 = coords.y1;
+            cropx2 = coords.x2;
+            cropy2 = coords.y2;
+            cropwidth = dimensions.width;
+            cropheight = dimensions.height;
+
+            console.log("X1: " + cropx1, " Y1: " + cropy1 + " X2: " + cropx1, " Y2: " + cropy1 + " Width: " + cropwidth + " Height: " + cropheight);
         }
     });

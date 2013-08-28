@@ -14,11 +14,6 @@ define(["./formBuilder"], function(formBuilder){
                     data:[{label:"Select File", name:"fileName", element:"select",
                         options:options, labelFunction:labelFunc, other:['required']}]
                 };
-                /*var model = {
-                    legend:{value:"Choose the main file", classes:"header"},
-                    data:[{label:"Select File", name:"fileName", element:"input",
-                        checkbox:options, labelFunction:labelFunc, other:['required']}]
-                };*/
                 return formBuilder.create(model);
             }
         };

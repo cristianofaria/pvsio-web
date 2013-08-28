@@ -134,6 +134,13 @@ area{
 	left: 100px;
 }
 
+#btnCropSaveImage{
+    left: 100px;
+}
+#btnResizeSaveImage{
+    left: 115px;
+}
+
 .clear-both{
 	clear:both;
 }

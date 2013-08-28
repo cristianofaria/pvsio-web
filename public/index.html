@@ -6,6 +6,10 @@
 <link href="pvsioweb/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 <link href="pvsioweb/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
 <link href="pvsioweb/css/style.css" type="text/css" rel="stylesheet">
+<!--link rel="stylesheet" type="text/css" href="pvsioweb/lib/cropper/cropper.css"  media="screen"-->
+    <script src="https://ajax.googleapis.com/ajax/libs/prototype/1.7.0.0/prototype.js" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/scriptaculous/1.9.0/scriptaculous.js" type="text/javascript"></script>
+
 </head>
 <body>
 	<div id="content" class="center">
@@ -18,19 +22,33 @@
 			<span>    Project  </span><input type="text" placeholder="Untitled Project" id="txtProjectName" value="" class="input-Med" readonly="readonly">
 		</div>
 		<div id="body">
-			<div id="imageDiv">
+            <div class="header">
+                <a class="btn" id="resizeFull"><i class="icon-resize-full"></i> + 5%</a>
+                <a class="btn" id="resizeSmall"><i class="icon-resize-small"></i> - 5%</a>
+
+                <a class="btn" id="crop"><i class="icon-fullscreen"></i> Crop</a>
+            </div>
+
+            <div id="imageDiv">
 				<div id="imageDragAndDrop" class="dndcontainer">
 					<span class="center">Drag  user interface picture here or if you prefer, use the button below</span>
 					<br/>
 					<a class="btn btn-primary center" id='btnLoadPicture'><i class="icon-picture icon-white"></i> Load Picture</a>
 				</div>
-				<img src="pvsioweb/image/start.png" usemap="#prototypeMap" />
+                <div id="imgDiv">
+				    <img src="pvsioweb/image/start.png" alt="image" id="image" usemap="#prototypeMap" />
+                </div>
 				<div id="prototypeImage"></div>
 				<div id='console'></div>
 			</div>
 			<div id="controlsContainer">
 				<button id="btnBuilderView">Builder View</button>
 				<button id="btnSimulatorView">Simulator View</button>
+                <button id="btnCropCancelImage">Cancel Crop</button>
+                <button id="btnCropSaveImage">Save Crop</button>
+                <button id="btnResizeCancelImage">Cancel Resize</button>
+                <button id="btnResizeSaveImage">Save Resize</button>
+
 			</div>
 			
 			<div id='logsDiv'>
@@ -96,5 +114,6 @@
 	<map name="prototypeMap" id="prototypeMap">
 	
 	</map>
+
 </body>
 </html>

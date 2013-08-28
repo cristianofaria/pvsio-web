@@ -99,6 +99,7 @@ define(['util/eventDispatcher', 'formal/pvs/prototypebuilder/events', 'websocket
 		 * all the pvs source code that the client can access
 		 */
 		o.startPVSProcess = function(sourceFile, projectName){
+            console.log("FILE: " + sourceFile);
 			sourceFile = sourceFile || "pvscode/alarisGP_oldFW";
 			var token = {type:"startProcess", data:{fileName:sourceFile, projectName:projectName}};
 			ws.send(JSON.stringify(token));
@@ -123,7 +124,18 @@ define(['util/eventDispatcher', 'formal/pvs/prototypebuilder/events', 'websocket
 			ws.send(JSON.stringify(token));
 			return o;
 		};
-		
+
+        /**
+         * Changes to a new source for the pvsio process
+         */
+        o.getFileCode = function(){
+            //var token = {type:"getFileCode"};
+            //ws.send(JSON.stringify(token));
+
+            return o;
+        };
+
+
 		/**
 		 * saves the source code back to the server
 		 * @param data details containing fileName:String and fileContent:String of
