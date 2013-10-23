@@ -37,11 +37,16 @@ define(['./baseWidget', 'util/property','./widgetType'], function(baseWidget, pr
 		
 		o.getRenderData = function(){
 			var res = [];
-			res.push({label:"Area Type", element:"select", value:o.type(), data:widgetTypes, name:"type"});
-			res.push({label:"Area Identifier",element:"input", inputType:"text", value:o.functionText(), name:"functionText",other:['required']});
-			res.push({label:"Bind", element:'input', inputType:"checkbox", data:defaultEvents, value:o.events(), name:"events"});
-			res.push({label:"Recall Rate",element:"input", inputType:"text", pattern:"\\d{2,5}", value:o.recallRate(), name:"recallRate", other:['required']});
-			res.push({label:"",element:"textarea", inputType:"text", value:o.boundFunction(), name:"boundFunction", other:['readonly']});
+            //res.push({label:"Area Name Identifier",element:"textarea", inputType:"text", value:o.id(), name:"id", other:['readonly']});
+            res.push({label:"Area Type", element:"select", value:o.type(), data:widgetTypes, name:"type"});
+            res.push({label:"Area Identifier",element:"input", inputType:"text", value:o.functionText(), name:"functionText",other:['required']});
+            res.push({label:"Bind", element:'input', inputType:"checkbox", data:defaultEvents, value:o.events(), name:"events"});
+            res.push({label:"Recall Rate",element:"input", inputType:"text", pattern:"\\d{2,5}", value:o.recallRate(), name:"recallRate", other:['required']});
+            res.push({label:"",element:"textarea", inputType:"text", value:o.boundFunction(), name:"boundFunction", other:['readonly']});
+            res.push({label:"Top position",element:"input", inputType:"number", value: d3.select(".mark.selected").style("top").replace('px',''), name:"top", min:"0", step:"any", max:"910", other:['required']});
+            res.push({label:"Left position",element:"input", inputType:"number", value: d3.select(".mark.selected").style("left").replace('px',''), name:"left", min:"0", step:"any", max:"910", other:['required']});
+            res.push({label:"Width",element:"input", inputType:"number", value: d3.select(".mark.selected").style("width").replace('px',''), name:"width", min:"0", step:"any", max:"910", other:['required']});
+            res.push({label:"Height",element:"input", inputType:"number", value: d3.select(".mark.selected").style("height").replace('px',''), name:"height", min:"0", step:"any", max:"910", other:['required']});
 
 			return res;
 		};

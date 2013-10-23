@@ -65,6 +65,15 @@ define(['./displayMappings','util/Timer','util/eventDispatcher', "./widgetEvents
 						if(d.pattern){
 							el.attr('pattern', d.pattern);
 						}
+                        if(d.min){
+                            el.attr('min', d.min);
+                        }
+                        if(d.max){
+                            el.attr('max', d.max);
+                        }
+                        if(d.step){
+                            el.attr('step', d.step);
+                        }
 						if(d.data){
 							if(d.element === "select") {
 								el.selectAll("option").data(d.data).enter()
@@ -110,13 +119,15 @@ define(['./displayMappings','util/Timer','util/eventDispatcher', "./widgetEvents
 					//save handler for widget
 					controls.append("button").attr("type","submit").attr("class", "btn btn-success right").html("Save")
 						.on("click", function(){
+                            var validateOldArea = false;
 							if(validate(form)){	
 								d3.select(this).attr("type", "button");
-								
+								var width, height, top, left, name;
 								var res = data.map(function(d){
 									var el = d3.select("#" + d.name), value = el.empty() ? null : el.property("value")|| el.text();
 									value = value ? value.trim() : value;
 									///for checkboxes add list of items selected
+
 									if(d.data && d.inputType === 'checkbox'){
 										value = [];
 										d3.selectAll("input[type=checkbox][name=events]").each(function(d,i){
@@ -125,9 +136,67 @@ define(['./displayMappings','util/Timer','util/eventDispatcher', "./widgetEvents
 											}
 										});
 									}
-									return {key:d.name, value:value};
-								});
+                                    if (d.name==="width"){
+                                        width = value;
+                                        console.log("coords " + width);
+                                        validateOldArea = true;
+                                        return null;
+                                    }else if (d.name==="height"){
+                                        height = value;
+                                        console.log("coords " + height);
+                                        validateOldArea = true;
+                                        return null;
+                                    } else if (d.name==="top"){
+                                        top = value;
+                                        console.log("coords " + top);
+                                        validateOldArea = true;
+                                        return null;
+                                    } else if (d.name==="left"){
+                                        left = value;
+                                        console.log("coords " + left);
+                                        validateOldArea = true;
+                                        return null;
+                                    }else{
+                                        console.log(" return ");
+									    return {key:d.name, value:value};
+                                    }
+								}).filter(function(d){return d!== null;});
+                                //res.removeItem("width");
+                                //res = res.filter(function(f){return f!== null;});
+                                if (validateOldArea){
+                                    d3.select(".mark.selected").attr("startx",left+"px");
+                                    d3.select(".mark.selected").attr("starty",top+"px");
+                                    d3.select(".mark.selected").style("top",top+"px");
+                                    d3.select(".mark.selected").style("left",left+"px");
+                                    d3.select(".mark.selected").style("width",width+"px");
+                                    d3.select(".mark.selected").style("height",height+"px");
+
+                                    if(d3.select(".mark.selected").attr("id")!==null){
+                                        var heightSize = parseFloat(height) + parseFloat(top);
+                                        var widthSize = parseFloat(width) + parseFloat(left);
+                                        var coords = left + "," + top + "," + (widthSize) + "," + (heightSize);
+                                        d3.select("#prototypeMap area." + d3.select(".mark.selected").attr("id")).attr("coords",coords);
+                                    }
+                                   /* d3.select("#"+name).attr("startx",left+"px");
+                                    d3.select("#"+name).attr("starty",top+"px");
+                                    d3.select("#"+name).style("top",top+"px");
+                                    d3.select("#"+name).style("left",left+"px");
+                                    d3.select("#"+name).style("width",width+"px");
+                                    d3.select("#"+name).style("height",height+"px");
+                                    /*d3.selectAll("#prototypeMap area").each(function () {
+                                        var a = d3.select(this);
+                                        if (a.attr("class") === name){
+                                            a.attr("coords",top+","+widthSize+left+","+heightSize);
+                                        }
+                                    });*/
+                                }
+
+                                var w = widgetMaps.get(name);
+
+                                console.log("widget: "+ JSON.stringify(w));
+
 								widget = dataToWidget(res, widget);
+
 								widgetMaps.add(widget);
 								var event = {type:widgetEvents.WidgetSaved, mark:mark, 
 										formContainer:d3.select("div.detailsForm"), formData:res, widget:widget};

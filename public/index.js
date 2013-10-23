@@ -4,9 +4,6 @@
  * @date Dec 3, 2012 : 4:42:55 PM
  * @updated Cristiano Faria
  * @date Aug, 2013
- "prototype": "https://ajax.googleapis.com/ajax/libs/prototype/1.7.0.0/prototype.js",
- "scriptaculous": "https://ajax.googleapis.com/ajax/libs/scriptaculous/1.9.0/scriptaculous.js",
- "cropper": "../lib/cropper"
  */
 require.config({baseUrl: 'pvsioweb/app',
     paths: {
@@ -16,7 +13,6 @@ require.config({baseUrl: 'pvsioweb/app',
         "cropper": "../lib/cropper"
     }
 });
-
 
 require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
     'pvsioweb/createOverlay',
@@ -516,6 +512,17 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
 
         var imageForCrop;
         d3.select("#crop").on("click", function(){
+       /*     //$(function() {
+            //d3.select("#Display1360329548294").startResize();
+            d3.select("#image").style("display",null);
+            d3.select("#prototypeMap").style("display",null);
+            d3.select("#Display1360329548294").attr("class","ui-widget-content");
+            //$( "#Display1360329548294").resize();//.resizable();
+            $(function() {
+                $("#Display1360329548294").resizable();
+            });
+       */
+
             if(!resizeValidation && !cropValidation && currentProject.name !== ""){
                 d3.selectAll("#controlsContainer button").classed("selected",false);
 
@@ -661,6 +668,7 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
             rect = overlayCreator.createDiv(image);
         }).on("mouseup",function () {
                 //add the area for the drawn rectangle into the map element
+                console.log(rect);
                 if (moved) {
                     handleWidgetEdit(rect);
                     //add double click event listener to mark and
@@ -705,8 +713,9 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
                     e.mark.attr("id", e.widget.id());
                     e.formContainer.remove();
                     console.log(e);
-                    overlayCreator.createInteractiveImageArea(e.mark, widgetMaps.get(e.widget.id()), ws);
-
+                    if (d3.select("#prototypeMap area." + e.widget.id()).empty()) {
+                        overlayCreator.createInteractiveImageArea(e.mark, widgetMaps.get(e.widget.id()), ws);
+                    }
                     //update the regex for this mark if its a display widget and give it a display class
                     if (e.widget.type() === "Display") {
                         e.mark.classed("display", true);
@@ -1092,8 +1101,9 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
                                 if (currentProject.name !== "") {
                                     //currentFile.name = d.name;
                                     d3.select("div#body").style("display", null);
-                                    //fd = new FormData();
                                     fd.append("fileName", currentFile.name.split(".")[0]);
+
+                                    //verifying if the file is already in cache or not, if is in cache updates the id
                                     var verifyExistence = false;
                                     var selected = 0;
                                     for (var i = 0; i < filesOpened.length; i++) {
@@ -1103,10 +1113,13 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
                                         }
                                     }
                                     if (!verifyExistence) {
+                                        //file is not in cache, request the source of the file
+                                        // fd is a formData containing the current project name and the selected file name
                                         d3.xhr("/openFileCode").post(fd, function (err, res) {
                                             if (err) {
                                                 console.log(err);
                                             } else {
+                                                //change current file object, add to cache, add a menu tab, update Editor source
                                                 currentFile.source = res.responseText;
                                                 filesOpened.push({name: currentFile.name.split(".")[0], source: res.responseText});
                                                 selected = filesOpened.length - 1;
@@ -1115,11 +1128,11 @@ require(['websockets/pvs/pvsiowebsocket', 'pvsioweb/displayManager',
                                             }
                                         });
                                     } else {
+                                        //file is in cache, change current file object and update Editor Source
                                         changeCurrentFile(selected);
                                         updateSourceCode(filesOpened[selected].source);
                                     }
                                 } //else project is not activated
-
                                 d3.select("#imageDragAndDrop.dndcontainer").style("display", "none");
                                 e.form.remove();
                             }).addListener(formEvents.FormCancelled,function (e) {
